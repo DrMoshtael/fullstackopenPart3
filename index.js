@@ -2,7 +2,21 @@ const express = require('express')
 var morgan = require('morgan')
 const app = express()
 
-app.use(morgan('tiny'))
+app.use(express.json())
+
+const assignID = (request, response, next) => {
+    request.id = JSON.stringify(request.body)
+    next()
+}
+
+morgan.token('id',(request,response) => {
+    return request.id
+})
+
+app.use(assignID)
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :id'))
+
+
 
 let persons = [
     { 
@@ -40,7 +54,6 @@ app.get('/api/persons/:id', (request, response) => {
     const id=Number(request.params.id)
     const person=persons.find(person=>person.id===id)
     if (!person) {return response.status(404).end()}
-    console.log(person)
     response.json(person)
 })
 
@@ -56,7 +69,7 @@ const generateID = () => {
     )
 }
 
-app.use(express.json())
+
 
 app.post('/api/persons', (request, response) => {
     const body = request.body
@@ -80,7 +93,7 @@ app.post('/api/persons', (request, response) => {
         name: body.name,
         number: body.number
     }
-    console.log(person)
+
     persons = persons.concat(person)
 
     response.json(person)
