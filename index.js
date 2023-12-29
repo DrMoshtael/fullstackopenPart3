@@ -99,7 +99,7 @@ app.post('/api/persons', (request, response) => {
     }
 
     persons = persons.concat(person)
-    console.log(body)
+
     response.json(person)
 })
 
