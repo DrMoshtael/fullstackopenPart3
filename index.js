@@ -89,29 +89,40 @@ const generateID = () => {
 app.post('/api/persons', (request, response) => {
     const body = request.body
     
-    if (!body.name || !body.number) {
+    if (body.name === undefined || body.number === undefined) {
         console.log('failed')
         return response.status(400).json({
             error:'name or number missing'
         })
     }
 
-    if (persons.find(person => person.name.toLowerCase() === body.name.toLowerCase())) {
-        console.log('failed 2')
-        return (response.status(400).json({
-            error: 'name must be unique'
-        }))
-    }
-      
-    const person = {
-        id: generateID(),
+    const person = new Person({
         name: body.name,
-        number: body.number
-    }
+        number: body.number,
+    })
 
-    persons = persons.concat(person)
+    person.save()
+        .then(result => {
+            response.json(result)
+            console.log(result,'saved')
+        })
 
-    response.json(person)
+    // if (persons.find(person => person.name.toLowerCase() === body.name.toLowerCase())) {
+    //     console.log('failed 2')
+    //     return (response.status(400).json({
+    //         error: 'name must be unique'
+    //     }))
+    // }
+      
+    // const person = {
+    //     id: generateID(),
+    //     name: body.name,
+    //     number: body.number
+    // }
+
+    // persons = persons.concat(person)
+
+    // response.json(person)
 })
 
 const PORT = process.env.PORT || 3001
