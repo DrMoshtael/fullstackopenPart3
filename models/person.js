@@ -4,7 +4,7 @@ mongoose.set('strictQuery', false)
 
 const url = process.env.MONGODB_URI
 
-console.log('connecting to',url)
+console.log('connecting to', url)
 
 mongoose.connect(url)
     .then(result => {
@@ -18,11 +18,18 @@ const personSchema = new mongoose.Schema({
     name: {
         type: String,
         minLength: 3,
-        required: true
+        required: [true, 'Name required']
     },
     number: {
         type: String,
-        required: true
+        minLength: 9,
+        required: [true, 'Phone number required'],
+        validate: {
+            validator: number => {
+                return /^\d{2,3}-\d+$/.test(number)
+            },
+            message: '`{VALUE}` is not a valid phone number'
+        }
     },
 })
 
