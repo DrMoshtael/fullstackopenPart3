@@ -16,7 +16,7 @@ const assignID = (request, response, next) => {
     next()
 }
 
-morgan.token('id',(request,response) => {
+morgan.token('id', (request, response) => {
     return request.id
 })
 
@@ -26,25 +26,25 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :i
 
 
 let persons = [
-    { 
-      "id": 1,
-      "name": "Arto Hellas", 
-      "number": "040-123456"
+    {
+        "id": 1,
+        "name": "Arto Hellas",
+        "number": "040-123456"
     },
-    { 
-      "id": 2,
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
+    {
+        "id": 2,
+        "name": "Ada Lovelace",
+        "number": "39-44-5323523"
     },
-    { 
-      "id": 3,
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
+    {
+        "id": 3,
+        "name": "Dan Abramov",
+        "number": "12-43-234345"
     },
-    { 
-      "id": 4,
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
+    {
+        "id": 4,
+        "name": "Mary Poppendieck",
+        "number": "39-23-6423122"
     }
 ]
 
@@ -101,26 +101,26 @@ app.delete('/api/persons/:id', (request, response, next) => {
 
 
 
-app.post('/api/persons', (request, response) => {
-    const body = request.body
-    
-    if (body.name === undefined || body.number === undefined) {
-        console.log('failed')
-        return response.status(400).json({
-            error:'name or number missing'
-        })
-    }
+app.post('/api/persons', (request, response, next) => {
+    const { name, number } = request.body
+
+    // if (name === undefined || number === undefined) {
+    //     console.log('failed')
+    //     return response.status(400).json({
+    //         error:'name or number missing'
+    //     })
+    // }
 
     const person = new Person({
-        name: body.name,
-        number: body.number,
+        name: name,
+        number: number,
     })
 
     person.save()
         .then(result => {
             response.json(result)
-            console.log(result,'saved')
         })
+        .catch(error => next(error))
 
     // if (persons.find(person => person.name.toLowerCase() === body.name.toLowerCase())) {
     //     console.log('failed 2')
@@ -128,7 +128,7 @@ app.post('/api/persons', (request, response) => {
     //         error: 'name must be unique'
     //     }))
     // }
-      
+
     // const person = {
     //     id: generateID(),
     //     name: body.name,
@@ -141,14 +141,13 @@ app.post('/api/persons', (request, response) => {
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-    const body = request.body
+    const { name, number } = request.body
 
-    const person = {
-        name: body.name,
-        number: body.number,
-    }
-
-    Person.findByIdAndUpdate(request.params.id, person, {new: true})
+    Person.findByIdAndUpdate(
+        request.params.id,
+        { name, number },
+        { new: true, runValidators: true, context: 'query' }
+    )
         .then(updatedPerson => {
             response.json(updatedPerson)
         })
@@ -156,7 +155,7 @@ app.put('/api/persons/:id', (request, response, next) => {
 })
 
 const unknownEndpoint = (request, response) => {
-    response.status(404).send({ error: 'unknown endpoint'})
+    response.status(404).send({ error: 'unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
@@ -170,6 +169,12 @@ const errorHandling = (error, request, response, next) => {
             .send({
                 error: 'malformatted id'
             })
+    } else if (error.name === 'ValidationError') {
+        return response
+            .status(400)
+            .json({
+                error: error.message
+            })
     }
 
     next(error)
@@ -178,4 +183,4 @@ const errorHandling = (error, request, response, next) => {
 app.use(errorHandling)
 
 const PORT = process.env.PORT || 3001
-app.listen(PORT, ()=>console.log(`Server running on port ${PORT}`))
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
